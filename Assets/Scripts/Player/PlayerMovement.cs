@@ -5,11 +5,14 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] float movementSpeed;
-    [SerializeField] float minSpeed;
-    [SerializeField] float maxSpeed;
+    public float minSpeed;
+    public float maxSpeed;
 
     [SerializeField] [Range(0f, 1f)] float slowDownRatio;
     [SerializeField] float stopThreshold;
+
+    [SerializeField] Boundary rightBoundary;
+    [SerializeField] Boundary leftBoundary;
 
     new Rigidbody2D rigidbody;
 
@@ -22,27 +25,39 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        float input = Input.GetAxisRaw("Horizontal");
+        float input = Input.GetAxis("Horizontal");
 
         if (input != 0)
         {
             rigidbody.AddForce(new Vector2(movementSpeed * Time.deltaTime * input, 0));
 
-            if (input > 0 && rigidbody.velocity.x < minSpeed)
+            if (input > 0)
             {
-                rigidbody.velocity = new Vector2(minSpeed, rigidbody.velocity.y);
+                if (!rightBoundary.isTouching)
+                {
+                    if (rigidbody.velocity.x < minSpeed)
+                    {
+                        rigidbody.velocity = new Vector2(minSpeed * input, rigidbody.velocity.y);
+                    }
+                    else if (rigidbody.velocity.x > maxSpeed)
+                    {
+                        rigidbody.velocity = new Vector2(maxSpeed, rigidbody.velocity.y);
+                    }
+                }
             }
-            else if (input < 0 && rigidbody.velocity.x > -minSpeed)
+            else if (input < 0)
             {
-                rigidbody.velocity = new Vector2(-minSpeed, rigidbody.velocity.y);
-            }
-            else if (input > 0 && rigidbody.velocity.x > maxSpeed)
-            {
-                rigidbody.velocity = new Vector2(maxSpeed, rigidbody.velocity.y);
-            }
-            else if (input < 0 && rigidbody.velocity.x < -maxSpeed)
-            {
-                rigidbody.velocity = new Vector2(-maxSpeed, rigidbody.velocity.y);
+                if (!leftBoundary.isTouching)
+                {
+                    if (rigidbody.velocity.x > -minSpeed)
+                    {
+                        rigidbody.velocity = new Vector2(minSpeed * input, rigidbody.velocity.y);
+                    }
+                    else if (rigidbody.velocity.x < -maxSpeed)
+                    {
+                        rigidbody.velocity = new Vector2(-maxSpeed, rigidbody.velocity.y);
+                    }
+                }
             }
         }
         else
