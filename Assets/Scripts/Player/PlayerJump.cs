@@ -9,8 +9,6 @@ public class PlayerJump : MonoBehaviour
 
     new Rigidbody2D rigidbody;
 
-
-
     void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();    
