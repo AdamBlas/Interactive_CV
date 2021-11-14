@@ -2,12 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Switch : MonoBehaviour, IActivating
+public class Switch : Activating
 {
     [SerializeField] Sprite offSprite;
     [SerializeField] Sprite onSprite;
-    [SerializeField] IActivable activable;
+    [SerializeField] Activable[] activables;
     [SerializeField] float uiOpenCloseSpeed;
+    [SerializeField] bool singleUse;
+    bool used = false;
+
+    float startUiWidth = 0.1f;
 
     SpriteRenderer switchSprite;
     Transform ui;
@@ -21,35 +25,42 @@ public class Switch : MonoBehaviour, IActivating
         switchSprite = GetComponentInChildren<SpriteRenderer>();
         ui = transform.Find("UI Scaler");
 
-        ui.localScale = Vector3.zero;
+        ui.localScale = new Vector3(startUiWidth, 0);
         switchSprite.sprite = offSprite;
     }
 
-    public void Activate()
+    public override void Activate()
     {
         switchSprite.sprite = onSprite;
-        activable?.OnActivate();
+        
+        foreach (Activable a in activables)
+            a?.OnActivate();
     }
 
-    public void Deactivate()
+    public override void Deactivate()
     {
         switchSprite.sprite = offSprite;
-        activable?.OnDeactivate();
+
+        foreach (Activable a in activables)
+            a?.OnDeactivate();
     }
 
     public void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
-        {
-            playerInside = true;
-        }
+        if (used && singleUse)
+            return;
+
+        if (collision != null && !collision.CompareTag("Player"))
+            return;
+
+        playerInside = true;
 
         if (uiCloseCoroutine != null)
         {
             StopCoroutine(uiCloseCoroutine);
             uiCloseCoroutine = null;
         }
-        
+
         if (uiOpenCoroutine == null)
         {
             uiOpenCoroutine = StartCoroutine(UiOpen());
@@ -58,10 +69,10 @@ public class Switch : MonoBehaviour, IActivating
 
     public void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
-        {
-            playerInside = false;
-        }
+        if (collision != null && !collision.CompareTag("Player"))
+            return;
+
+        playerInside = false;
 
         if (uiOpenCoroutine != null)
         {
@@ -71,11 +82,11 @@ public class Switch : MonoBehaviour, IActivating
 
         if (uiCloseCoroutine == null)
         {
-            uiCloseCoroutine = StartCoroutine(UiOpen());
+            uiCloseCoroutine = StartCoroutine(UiClose());
         }
     }
 
-    public void OnTriggerStay2D(Collider2D collision)
+    public void Update()
     {
         if (playerInside && Input.GetKeyDown(KeyCode.E))
         {
@@ -88,21 +99,45 @@ public class Switch : MonoBehaviour, IActivating
             {
                 isActivated = true;
                 Activate();
+
+                used = true;
+                if (singleUse)
+                    OnTriggerExit2D(null);
             }
         }
     }
 
     IEnumerator UiOpen()
     {
-        while (true)
+        while (ui.localScale.y < 1)
         {
-            ui.localScale += new Vector3(0, 0);
+            ui.localScale += new Vector3(0, uiOpenCloseSpeed * Time.deltaTime);
             yield return null;
         }
+        ui.localScale = new Vector3(ui.localScale.x, 1);
+
+        while (ui.localScale.x < 1)
+        {
+            ui.localScale += new Vector3(uiOpenCloseSpeed * Time.deltaTime, 0);
+            yield return null;
+        }
+        ui.localScale = Vector3.one;
     }
 
     IEnumerator UiClose()
     {
-        yield return null;
+        while (ui.localScale.x > startUiWidth)
+        {
+            ui.localScale -= new Vector3(uiOpenCloseSpeed * Time.deltaTime, 0);
+            yield return null;
+        }
+        ui.localScale = new Vector3(startUiWidth, 1);
+
+        while (ui.localScale.y > 0)
+        {
+            ui.localScale -= new Vector3(0, uiOpenCloseSpeed * Time.deltaTime);
+            yield return null;
+        }
+        ui.localScale = new Vector3(startUiWidth, 0);
     }
 }
