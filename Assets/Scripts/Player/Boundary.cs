@@ -21,4 +21,9 @@ public class Boundary : MonoBehaviour
             isTouching = false;
         }
     }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        OnTriggerEnter2D(collision);
+    }
 }

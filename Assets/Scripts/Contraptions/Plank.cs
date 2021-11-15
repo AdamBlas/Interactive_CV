@@ -20,7 +20,7 @@ public class Plank : Activable
     Coroutine retractCoroutine;
     new BoxCollider2D collider;
 
-    private void Start()
+    private new void Start()
     {
         collider = GetComponentInParent<BoxCollider2D>();
 
