@@ -16,7 +16,11 @@ public class DialogueBox : MonoBehaviour
 
     Coroutine showCoroutine;
     Coroutine hideCoroutine;
+    static Coroutine textCoroutine;
     float t = 0;
+    bool messaging = false;
+
+    Queue<string> textQueue = new Queue<string>();
 
     private void Start()
     {
@@ -90,21 +94,40 @@ public class DialogueBox : MonoBehaviour
         box.localPosition = hidePos;
     }
 
-    public static void SetText(string text)
+    public static void ClearTextQueue()
     {
-        @this.StartCoroutine(@this._SetText(text));
+        if (textCoroutine != null)
+        {
+            @this.StopCoroutine(textCoroutine);
+            @this.messaging = false;
+            textCoroutine = null;
+        }
+        @this.textQueue.Clear();
     }
-    IEnumerator _SetText(string text)
+    public static void SetText(string text, int pause = 30)
     {
-        this.text.text = string.Empty;
+        @this.textQueue.Enqueue(text + GetPause(pause));
+        if (!@this.messaging)
+        {
+            textCoroutine = @this.StartCoroutine(@this._DisplayMessage());
+        }
+    }
+    IEnumerator _DisplayMessage()
+    {
+        messaging = true;
         float delay = 1f / charsPerSec;
 
-        foreach (char c in text)
+        while (textQueue.Count != 0)
         {
-            if (c != 11)
-                this.text.text += c;
-            yield return new WaitForSeconds(delay);
+            this.text.text = string.Empty;
+            foreach (char c in textQueue.Dequeue())
+            {
+                if (c != 11)
+                    this.text.text += c;
+                yield return new WaitForSeconds(delay);
+            }
         }
+        messaging = false;
     }
 
     public static string GetPause(int pausesAmount)
@@ -113,7 +136,7 @@ public class DialogueBox : MonoBehaviour
 
         for (int i = 0; i < pausesAmount; ++i)
         {
-            result += char.ConvertFromUtf32(11);
+            result += (char)11;
         }
 
         return result;

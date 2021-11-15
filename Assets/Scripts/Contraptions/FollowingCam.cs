@@ -43,7 +43,9 @@ public class FollowingCam : MonoBehaviour
 
                 if (!showingBox)
                 {
-                    DialogueBox.SetText("SCANNER:\nScanning" + DialogueBox.GetPause(5) + "." + DialogueBox.GetPause(5) + "." + DialogueBox.GetPause(5) + "." + DialogueBox.GetPause(30) + "\nScanned languages:\nPolish: Native\nEnglish: C1");
+                    DialogueBox.ClearTextQueue();
+                    DialogueBox.SetText("SCANNER:\nScanning" + DialogueBox.GetPause(5) + "." + DialogueBox.GetPause(5) + "." + DialogueBox.GetPause(5) + ".");
+                    DialogueBox.SetText("SCANNER:\nLanguages found:\nPolish:  Native\nEnglish: C1");
                     DialogueBox.ShowBox();
                     showingBox = true;
                 }
